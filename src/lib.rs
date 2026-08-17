@@ -37,7 +37,7 @@ impl Default for NiceAutoVocoder {
 impl Plugin for NiceAutoVocoder {
     const NAME: &'static str = "Autovocoder (nice-plug)";
     const VENDOR: &'static str = "hotspoons + kitlith";
-    const URL: &'static str = "https://youtu.be/dQw4w9WgXcQ";
+    const URL: &'static str = "https://github.com/kitlith/autovocoder-nice";
     const EMAIL: &'static str = "info@example.com";
     const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -182,10 +182,10 @@ impl Plugin for NiceAutoVocoder {
 }
 
 impl ClapPlugin for NiceAutoVocoder {
-    const CLAP_ID: &'static str = "com.github.hotspoons.autovocoder";
+    const CLAP_ID: &'static str = "pw.kitl.autovocoder-nice";
     const CLAP_DESCRIPTION: Option<&'static str> = None;
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
-    const CLAP_SUPPORT_URL: Option<&'static str> = None;
+    const CLAP_SUPPORT_URL: Option<&'static str> = Some("https://github.com/kitlith/autovocoder-nice/issues");
     const CLAP_FEATURES: &'static [ClapFeature] = &[
         ClapFeature::AudioEffect,
         ClapFeature::MultiEffects,
