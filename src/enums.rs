@@ -1,6 +1,8 @@
 use nice_plug::prelude::Enum;
+use strum::FromRepr;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum ChordVoicing {
     #[name = "Power (5)"]
     Power, // 1 - 5            (0, 7)
@@ -51,7 +53,8 @@ impl From<ChordVoicing> for autovocoder_dsp::ChordVoicing {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum DriveMode {
     Tube,
     Tape,
@@ -69,7 +72,8 @@ impl From<DriveMode> for autovocoder_dsp::DriveMode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum LfoTarget {
     #[name = "Amplitude (tremolo)"]
     Amplitude,
@@ -93,7 +97,8 @@ impl From<LfoTarget> for autovocoder_dsp::LfoTarget {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum PitchAlgorithm {
     #[name = "YIN (classic)"]
     YinClassic,
@@ -114,7 +119,8 @@ impl From<PitchAlgorithm> for autovocoder_dsp::PitchAlgorithm {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum ScaleKind {
     Chromatic,
     Major,
@@ -151,7 +157,8 @@ impl ScaleKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum ScaleRoot {
     C,
     #[name = "C#"]
@@ -172,7 +179,8 @@ pub enum ScaleRoot {
     B,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum, FromRepr)]
+#[repr(i32)]
 pub enum CarrierMode {
     Mono,
     #[name = "Chord (tracks)"]

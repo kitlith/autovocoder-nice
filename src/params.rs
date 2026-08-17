@@ -14,15 +14,15 @@ pub struct AutoVocoderParams {
     #[persist = "editor-state"]
     pub editor_state: Arc<EguiState>,
     #[id = "mode"]
-    pub carrier_mode: EnumParam<CarrierMode>,
+    pub mode: EnumParam<CarrierMode>,
     #[id = "f_note"]
     pub fixed_note: IntParam,
     #[id = "scale"]
-    pub scale_kind: EnumParam<ScaleKind>,
+    pub scale: EnumParam<ScaleKind>,
     #[id = "s_root"]
     pub scale_root: EnumParam<ScaleRoot>,
     #[id = "drywet"]
-    pub dry_wet: FloatParam,
+    pub mix: FloatParam,
     #[id = "portam"]
     pub portamento: FloatParam,
     #[id = "clevel"]
@@ -50,15 +50,15 @@ pub struct AutoVocoderParams {
     #[id = "rusmix"]
     pub chorus_mix: FloatParam,
     #[id = "tr_on"]
-    pub tremolo_on: BoolParam,
+    pub trem_on: BoolParam,
     #[id = "trrate"]
-    pub tremolo_rate: FloatParam,
+    pub trem_rate: FloatParam,
     #[id = "tr_dep"]
-    pub tremolo_depth: FloatParam,
+    pub trem_depth: FloatParam,
     #[id = "trshap"]
-    pub tremolo_shape: FloatParam,
+    pub trem_shape: FloatParam,
     #[id = "trtarg"]
-    pub tremolo_target: EnumParam<LfoTarget>,
+    pub trem_target: EnumParam<LfoTarget>,
     #[id = "predrv"]
     pub pre_drive_on: BoolParam,
     #[id = "po_drv"]
@@ -151,7 +151,7 @@ impl UpdateFlags {
         bitflag_check!(self, {
             UpdateFlags::CarrierMode => {
                 use autovocoder_dsp::CarrierMode::*;
-                let mode = match params.carrier_mode.value() {
+                let mode = match params.mode.value() {
                     CarrierMode::Mono => Mono,
                     CarrierMode::Chord => Chord(params.chord_type.value().into()),
                     CarrierMode::Fixed => Fixed {
@@ -165,13 +165,13 @@ impl UpdateFlags {
                 av.set_carrier_mode(mode);
             }
             UpdateFlags::Scale => {
-                let scale_kind = params.scale_kind.value().to_int();
+                let scale_kind = params.scale.value().to_int();
                 let scale_root = params.scale_root.value() as u8;
                 av.set_scale(autovocoder_dsp::Scale::from_int(scale_kind, scale_root));
             }
             UpdateFlags::DryWet => {
-                av.set_dry_wet(params.dry_wet.value());
-                tracing::info!("{:?} (value: {})", params.dry_wet, params.dry_wet.value());
+                av.set_dry_wet(params.mix.value());
+                tracing::info!("{:?} (value: {})", params.mix, params.mix.value());
             },
             UpdateFlags::Portamento => av.set_portamento_ms(params.portamento.value()),
             UpdateFlags::CarrierLevel => av.set_carrier_level(params.carrier_level.value()),
@@ -185,11 +185,11 @@ impl UpdateFlags {
             UpdateFlags::ChorusRate => av.set_chorus_rate_hz(params.chorus_rate.value()),
             UpdateFlags::ChorusDepth => av.set_chorus_depth(params.chorus_depth.value()),
             UpdateFlags::ChorusMix => av.set_chorus_mix(params.chorus_mix.value()),
-            UpdateFlags::TremoloEnabled => av.set_tremolo_enabled(params.tremolo_on.value()),
-            UpdateFlags::TremoloRate => av.set_tremolo_rate_hz(params.tremolo_rate.value()),
-            UpdateFlags::TremoloDepth => av.set_tremolo_depth(params.tremolo_depth.value()),
-            UpdateFlags::TremoloShape => av.set_tremolo_shape(params.tremolo_shape.value()),
-            UpdateFlags::TremoloTarget => av.set_tremolo_target(params.tremolo_target.value().into()),
+            UpdateFlags::TremoloEnabled => av.set_tremolo_enabled(params.trem_on.value()),
+            UpdateFlags::TremoloRate => av.set_tremolo_rate_hz(params.trem_rate.value()),
+            UpdateFlags::TremoloDepth => av.set_tremolo_depth(params.trem_depth.value()),
+            UpdateFlags::TremoloShape => av.set_tremolo_shape(params.trem_shape.value()),
+            UpdateFlags::TremoloTarget => av.set_tremolo_target(params.trem_target.value().into()),
             UpdateFlags::PreDriveEnabled => av.set_pre_drive_enabled(params.pre_drive_on.value()),
             UpdateFlags::PostDriveEnabled => av.set_post_drive_enabled(params.post_drive_on.value()),
             UpdateFlags::DriveMode => av.set_drive_mode(params.drive_mode.value().into()),
@@ -220,7 +220,7 @@ impl AutoVocoderParams {
                 MIN_WINDOW_WIDTH as f32,
                 MIN_WINDOW_HEIGHT as f32,
             )),
-            carrier_mode: EnumParam::new("Carrier Mode", CarrierMode::Mono)
+            mode: EnumParam::new("Carrier Mode", CarrierMode::Mono)
                 .with_callback(cb!(UpdateFlags::CarrierMode)),
             fixed_note: IntParam::new(
                 "Fixed Note (MIDI)",
@@ -228,11 +228,11 @@ impl AutoVocoderParams {
                 IntRange::Linear { min: 24, max: 84 },
             )
             .with_callback(cb!(UpdateFlags::CarrierMode)),
-            scale_kind: EnumParam::new("Scale", ScaleKind::Chromatic)
+            scale: EnumParam::new("Scale", ScaleKind::Chromatic)
                 .with_callback(cb!(UpdateFlags::Scale)),
             scale_root: EnumParam::new("Scale Root", ScaleRoot::C)
                 .with_callback(cb!(UpdateFlags::Scale)),
-            dry_wet: FloatParam::new("Dry/Wet", 1., FloatRange::Linear { min: 0., max: 1. })
+            mix: FloatParam::new("Dry/Wet", 1., FloatRange::Linear { min: 0., max: 1. })
                 .with_callback(cb!(UpdateFlags::DryWet)),
             portamento: FloatParam::new(
                 "Portamento",
@@ -299,27 +299,27 @@ impl AutoVocoderParams {
             .with_callback(cb!(UpdateFlags::ChorusDepth)),
             chorus_mix: FloatParam::new("Chorus Mix", 0.5, FloatRange::Linear { min: 0., max: 1. })
                 .with_callback(cb!(UpdateFlags::ChorusMix)),
-            tremolo_on: BoolParam::new("Tremolo", false)
+            trem_on: BoolParam::new("Tremolo", false)
                 .with_callback(cb!(UpdateFlags::TremoloEnabled)),
-            tremolo_rate: FloatParam::new(
+            trem_rate: FloatParam::new(
                 "Tremolo Rate",
                 5.,
                 FloatRange::Linear { min: 0.1, max: 20. },
             )
             .with_callback(cb!(UpdateFlags::TremoloRate)),
-            tremolo_depth: FloatParam::new(
+            trem_depth: FloatParam::new(
                 "Tremolo Depth",
                 0.7,
                 FloatRange::Linear { min: 0., max: 1. },
             )
             .with_callback(cb!(UpdateFlags::TremoloDepth)),
-            tremolo_shape: FloatParam::new(
+            trem_shape: FloatParam::new(
                 "Tremolo Shape (Sine→Square)",
                 0.,
                 FloatRange::Linear { min: 0., max: 1. },
             )
             .with_callback(cb!(UpdateFlags::TremoloShape)),
-            tremolo_target: EnumParam::new("Mod LFO Target", LfoTarget::Amplitude)
+            trem_target: EnumParam::new("Mod LFO Target", LfoTarget::Amplitude)
                 .with_callback(cb!(UpdateFlags::TremoloTarget)),
             pre_drive_on: BoolParam::new("Drive on Modulator (pre-vocoder)", false)
                 .with_callback(cb!(UpdateFlags::PreDriveEnabled)),

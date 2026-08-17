@@ -6,6 +6,9 @@ name = "autovocoder-nice"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+pretty = ["dep:syn", "dep:prettyplease"] # useful for inspecting generated code
+
 [lib]
 crate-type = ["cdylib", "lib"]
 
@@ -37,3 +40,13 @@ autovocoder-dsp = {
 tracing-subscriber = "0.3.23"
 tracing = "0.1.44"
 egui = "0.35.0"
+strum = { version = "0.28.0", features = ["derive"] }
+
+[build-dependencies]
+cargo_metadata = "0.23.1"
+oxrdf = "0.3.3"
+oxttl = "0.2.3"
+prettyplease = { version = "0.3.0", optional = true }
+proc-macro2 = "1.0.107"
+quote = "1.0.47"
+syn = { version = "3.0.3", optional = true }
