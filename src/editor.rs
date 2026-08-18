@@ -2,16 +2,16 @@ use std::sync::Arc;
 
 use egui::{Layout, Margin, TextStyle, Ui, Vec2};
 use nice_plug::{
-    context::gui::ParamSetter,
-    editor::Editor,
+    context::gui::{GuiContext, ParamSetter},
+    editor::{ResizeHint, dpi::LogicalSize},
     params::{BoolParam, Param, ParamFlags, Params, enums::EnumParamInner, internals::ParamPtr},
 };
-use nice_plug_egui::{create_egui_editor, resizable_window::ResizableWindow, widgets::ParamSlider};
+use nice_plug_egui::{NiceEguiApp, resizable_window::ResizableWindow, widgets::ParamSlider};
 
-use crate::{NiceAutoVocoder, presets::PRESETS};
+use crate::{params::AutoVocoderParams, presets::PRESETS};
 
-pub const MIN_WINDOW_WIDTH: u32 = 500;
-pub const MIN_WINDOW_HEIGHT: u32 = 300;
+pub const MIN_WINDOW_SIZE: LogicalSize<f32> = LogicalSize::new(500.0, 300.0);
+pub const RESIZE_HINT: ResizeHint = ResizeHint::resizable().with_min_logical_size(MIN_WINDOW_SIZE);
 
 struct GenericUi;
 
@@ -95,54 +95,78 @@ impl GenericUi {
     }
 }
 
-struct GuiState {
+struct OpenEditorState {
+    _egui_ctx: egui::Context,
+    nice_gui_ctx: GuiContext,
+}
+
+pub struct NiceAutoVocoderEditor {
+    open_state: Option<OpenEditorState>,
+    params: Arc<AutoVocoderParams>,
     preset_idx: usize,
 }
 
-impl NiceAutoVocoder {
-    pub(crate) fn editor_impl(&mut self) -> Option<Box<dyn Editor>> {
-        let params = self.params.clone();
+impl NiceAutoVocoderEditor {
+    pub fn new(params: Arc<AutoVocoderParams>) -> Self {
+        Self {
+            open_state: None,
+            params,
+            preset_idx: 0,
+        }
+    }
+}
 
-        create_egui_editor(
-            self.params.editor_state.clone(),
-            GuiState { preset_idx: 0 },
-            Default::default(),
-            |_egui_ctx, _queue, _gui_state| {},
-            move |ui, setter, _queue, gui_state| {
-                ResizableWindow::new("res-wind")
-                    .min_size(Vec2::new(MIN_WINDOW_WIDTH as f32, MIN_WINDOW_HEIGHT as f32))
+impl NiceEguiApp for NiceAutoVocoderEditor {
+    fn build(
+        &mut self,
+        _egui_ctx: egui::Context,
+        nice_gui_ctx: GuiContext,
+        _frame: &mut nice_plug_egui::Frame,
+    ) -> Result<(), nice_plug_egui::baseview::HandlerError> {
+        self.open_state = Some(OpenEditorState {
+            _egui_ctx,
+            nice_gui_ctx,
+        });
+        Ok(())
+    }
+
+    fn editor_closed(&mut self) {
+        self.open_state = None;
+    }
+
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut nice_plug_egui::Frame) {
+        let Some(state) = self.open_state.as_mut() else {
+            return;
+        };
+
+        let setter = state.nice_gui_ctx.param_setter();
+
+        ResizableWindow::new("res-wind")
+            .min_size(Vec2::new(MIN_WINDOW_SIZE.width, MIN_WINDOW_SIZE.height))
+            .show(ui, |ui| {
+                egui::Frame::new()
+                    .inner_margin(Margin::same(5))
                     .show(ui, |ui| {
-                        egui::Frame::new()
-                            .inner_margin(Margin::same(5))
-                            .show(ui, |ui| {
-                                ui.horizontal(|ui| {
-                                    ui.with_layout(
-                                        Layout::right_to_left(egui::Align::Center),
-                                        |ui| {
-                                            egui::ComboBox::from_id_salt("Preset").show_index(
-                                                ui,
-                                                &mut gui_state.preset_idx,
-                                                PRESETS.len(),
-                                                |idx| PRESETS[idx].0,
-                                            );
+                        ui.horizontal(|ui| {
+                            ui.with_layout(Layout::right_to_left(egui::Align::Center), |ui| {
+                                egui::ComboBox::from_id_salt("Preset").show_index(
+                                    ui,
+                                    &mut self.preset_idx,
+                                    PRESETS.len(),
+                                    |idx| PRESETS[idx].0,
+                                );
 
-                                            if ui.button("Apply Preset").clicked() {
-                                                PRESETS[gui_state.preset_idx]
-                                                    .1
-                                                    .apply(&params, setter);
-                                            }
-                                        },
-                                    )
-                                });
+                                if ui.button("Apply Preset").clicked() {
+                                    PRESETS[self.preset_idx].1.apply(&self.params, &setter);
+                                }
+                            })
+                        });
 
-                                let padding =
-                                    Vec2::splat(ui.text_style_height(&TextStyle::Body) * 0.2);
-                                ui.allocate_space(padding);
+                        let padding = Vec2::splat(ui.text_style_height(&TextStyle::Body) * 0.2);
+                        ui.allocate_space(padding);
 
-                                GenericUi::create(ui, params.clone(), setter);
-                            });
+                        GenericUi::create(ui, self.params.clone(), &setter);
                     });
-            },
-        )
+            });
     }
 }

@@ -1,4 +1,7 @@
 use nice_plug::prelude::*;
+use nice_plug_egui::{
+    EguiEditor, EguiEditorState, EguiNiceSettings, RepaintNotifier, create_egui_editor,
+};
 use std::sync::{Arc, atomic::Ordering::SeqCst};
 use tracing::level_filters::LevelFilter;
 
@@ -11,10 +14,15 @@ mod presets;
 
 use params::*;
 
-use crate::params::UpdateFlags;
+use crate::{
+    editor::{MIN_WINDOW_SIZE, NiceAutoVocoderEditor, RESIZE_HINT},
+    params::UpdateFlags,
+};
 
 pub struct NiceAutoVocoder {
     params: Arc<AutoVocoderParams>,
+    editor_state: Arc<EguiEditorState>,
+    repaint_notifier: RepaintNotifier,
     inner: Option<AutoVocoder>,
     update_flags: Arc<atomig::Atomic<UpdateFlags>>,
     input_scratch: Vec<f32>,
@@ -27,6 +35,8 @@ impl Default for NiceAutoVocoder {
         let update_flags = Arc::new(atomig::Atomic::default());
         Self {
             params: Arc::new(AutoVocoderParams::new(update_flags.clone())),
+            editor_state: EguiEditorState::from_size(MIN_WINDOW_SIZE, 1.0),
+            repaint_notifier: RepaintNotifier::new(),
             inner: None,
             update_flags,
             input_scratch: Vec::new(),
@@ -61,12 +71,13 @@ impl Plugin for NiceAutoVocoder {
 
     type SysExMessage = ();
     type BackgroundTask = ();
+    type Editor = EguiEditor<NiceAutoVocoderEditor>;
 
-    fn initialize(
+    fn activate(
         &mut self,
         _audio_io_layout: &AudioIOLayout,
         buffer_config: &BufferConfig,
-        _context: &mut impl InitContext<Self>,
+        _context: &mut impl ActivateContext<Self>,
     ) -> bool {
         // autovocoder needs to be recreated when sample rate changes.
         let needs_creation = self
@@ -176,8 +187,13 @@ impl Plugin for NiceAutoVocoder {
         )
     }
 
-    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-        self.editor_impl()
+    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Self::Editor> {
+        create_egui_editor(
+            self.editor_state.clone(),
+            self.repaint_notifier.clone(),
+            EguiNiceSettings::new().with_resize_hint(RESIZE_HINT),
+            NiceAutoVocoderEditor::new(self.params.clone()),
+        )
     }
 }
 
@@ -185,7 +201,8 @@ impl ClapPlugin for NiceAutoVocoder {
     const CLAP_ID: &'static str = "pw.kitl.autovocoder-nice";
     const CLAP_DESCRIPTION: Option<&'static str> = None;
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
-    const CLAP_SUPPORT_URL: Option<&'static str> = Some("https://github.com/kitlith/autovocoder-nice/issues");
+    const CLAP_SUPPORT_URL: Option<&'static str> =
+        Some("https://github.com/kitlith/autovocoder-nice/issues");
     const CLAP_FEATURES: &'static [ClapFeature] = &[
         ClapFeature::AudioEffect,
         ClapFeature::MultiEffects,

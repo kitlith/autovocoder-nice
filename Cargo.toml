@@ -31,15 +31,15 @@ strip = "none"
 [dependencies]
 atomig = { version = "0.4.3", features = ["derive"]}
 bitflag-attr = "0.14.0"
-nice-plug = "0.2"
-nice-plug-egui = "0.3"
+nice-plug = "0.3"
+nice-plug-egui = "0.4"
 autovocoder-dsp = {
     git = "https://github.com/hotspoons/autovocoder",
     rev = "634c6b3eec4a5f81bde5d5885fc88c6ddda2f495"
 }
 tracing-subscriber = "0.3.23"
 tracing = "0.1.44"
-egui = "0.35.0"
+egui = "0.36.1"
 strum = { version = "0.28.0", features = ["derive"] }
 
 [build-dependencies]

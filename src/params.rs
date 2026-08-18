@@ -1,18 +1,12 @@
 use std::sync::{Arc, atomic::Ordering};
 
-use crate::{
-    editor::{MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH},
-    enums::*,
-};
+use crate::enums::*;
 use atomig::{Atom, AtomLogic};
 use bitflag_attr::bitflag;
-use nice_plug::{editor::dpi::LogicalSize, prelude::*};
-use nice_plug_egui::EguiState;
+use nice_plug::prelude::*;
 
 #[derive(Params, Debug)]
 pub struct AutoVocoderParams {
-    #[persist = "editor-state"]
-    pub editor_state: Arc<EguiState>,
     #[id = "mode"]
     pub mode: EnumParam<CarrierMode>,
     #[id = "f_note"]
@@ -216,10 +210,6 @@ impl AutoVocoderParams {
         }
 
         Self {
-            editor_state: EguiState::from_size(LogicalSize::new(
-                MIN_WINDOW_WIDTH as f32,
-                MIN_WINDOW_HEIGHT as f32,
-            )),
             mode: EnumParam::new("Carrier Mode", CarrierMode::Mono)
                 .with_callback(cb!(UpdateFlags::CarrierMode)),
             fixed_note: IntParam::new(
