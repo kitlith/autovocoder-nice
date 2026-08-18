@@ -179,8 +179,7 @@ dependencies = [
 [[package]]
 name = "baseview"
 version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44fd6d0034f02225d7b83b248b536b06c90959af871f5fac88067e93e9b36c4e"
+source = "git+https://github.com/kitlith/baseview.git?branch=remove_dbg#04ea14d593c147679941c58841e8d8ac8eabb7aa"
 dependencies = [
  "block2 0.6.2",
  "bytemuck",
