@@ -1,6 +1,7 @@
 # autovocoder (nice-plug wrapper)
 
-Original plugin is good, I wanted to share it with my friends who use Windows and had a bad time.
+The [original plugin](https://github.com/hotspoons/autovocoder) is good,
+I wanted to share it with my friends who use Windows and had a bad time.
 (LV2 is not well supported on Windows.)
 This repo presents the same plugin but as VST3 and CLAP instead, using the nice-plug framework.
 
